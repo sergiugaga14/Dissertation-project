@@ -1,0 +1,17 @@
+# Experiment 07: Medical Embedding — MedCPT
+# Replace general embeddings with MedCPT (asymmetric medical encoder)
+
+defaults:
+  - ../base
+
+experiment:
+  name: "exp07_medcpt"
+  description: "MedCPT asymmetric medical embeddings"
+
+pipeline:
+  embedder:
+    name: "medcpt"
+    params:
+      # MedCPT uses separate query and article encoders
+      query_model: "ncbi/MedCPT-Query-Encoder"
+      article_model: "ncbi/MedCPT-Article-Encoder"

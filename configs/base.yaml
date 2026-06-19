@@ -1,0 +1,53 @@
+# Base experiment configuration
+# All experiments inherit from this and override specific components
+
+pipeline:
+  extractor:
+    name: "pymupdf"
+    params:
+      extract_images: false
+
+  chunker:
+    name: "fixed"
+    params:
+      chunk_size: 512
+      overlap: 50
+
+  embedder:
+    name: "sentence-transformer"
+    params:
+      model_name: "all-MiniLM-L6-v2"
+
+  retriever:
+    name: "dense"
+    params:
+      collection_name: "medrag"
+
+  generator:
+    name: "medgemma"
+    params:
+      model_name: "google/medgemma-4b-it"
+      quantization: "4bit"
+      max_new_tokens: 1024
+
+evaluation:
+  benchmark: "medqa"
+  split: "test"
+  num_samples: 200  # start small, increase for final results
+  top_k: 5
+  prompt_template: "default"
+  temperature: 0.0
+
+data:
+  documents_dir: "data/raw/pdfs"
+  images_dir: "data/raw/images"
+  persist_dir: "data/processed/vectorstore"
+
+output:
+  results_dir: "results/metrics"
+  logs_dir: "results/logs"
+  figures_dir: "results/figures"
+
+tracking:
+  use_wandb: false
+  project_name: "medrag-thesis"

@@ -1,0 +1,16 @@
+# Experiment 14: Hybrid Retrieval (BM25 + Dense)
+# Combines sparse keyword matching with dense semantic search
+
+defaults:
+  - ../base
+
+experiment:
+  name: "exp14_hybrid_retrieval"
+  description: "Hybrid retrieval combining BM25 sparse + dense vectors"
+
+pipeline:
+  retriever:
+    name: "hybrid"
+    params:
+      alpha: 0.5       # equal weight dense and sparse
+      rrf_k: 60        # RRF constant

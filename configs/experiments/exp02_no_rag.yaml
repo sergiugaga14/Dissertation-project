@@ -1,0 +1,14 @@
+# Experiment 02: No RAG — Direct MEDgemma QA
+# Test MEDgemma's built-in medical knowledge without retrieval.
+# This shows the value that RAG adds.
+
+defaults:
+  - ../base
+
+experiment:
+  name: "exp02_no_rag"
+  description: "MEDgemma without RAG — tests model's inherent medical knowledge"
+
+evaluation:
+  top_k: 0  # no retrieval — direct generation
+  prompt_template: "zero_shot"

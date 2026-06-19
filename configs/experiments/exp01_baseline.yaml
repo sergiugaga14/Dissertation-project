@@ -1,0 +1,12 @@
+# Experiment 01: Baseline — Naive RAG
+# PyMuPDF + Fixed-512 + MiniLM + Dense + zero-shot
+# This is the simplest possible RAG setup to establish a baseline.
+
+defaults:
+  - ../base
+
+experiment:
+  name: "exp01_baseline"
+  description: "Naive RAG baseline with simplest components"
+
+# All values inherited from base.yaml — no overrides needed
