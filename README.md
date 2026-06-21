@@ -15,6 +15,7 @@ a practical medical knowledge assistant.
 
 ## Research Questions
 
+
 1. **RQ1**: How do different document extraction methods (OCR, layout-aware, vision-based) 
    affect downstream medical QA accuracy?
 2. **RQ2**: Which embedding models (general-purpose vs. medical-domain-specific) produce 
