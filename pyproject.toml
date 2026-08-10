@@ -7,10 +7,17 @@ authors = [
     { name = "Sergiu Gaga", email = "Sergiu.Gaga@broadridge.com" }
 ]
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "torch>=2.6",
+    "numpy>=2.1",
+    "ipykernel>=6.29",
+    "ipywidgets>=8.1",
+]
 
 [tool.uv]
 required-version = ">=0.12.3"
+# Picks CUDA wheels on machines with an NVIDIA driver, CPU wheels elsewhere.
+torch-backend = "auto"
 
 [project.scripts]
 dissertation-project = "dissertation_project:main"

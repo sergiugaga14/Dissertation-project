@@ -99,6 +99,72 @@ git commit -m "Add retrieval dependencies"
 > the bare `python` command would still be 3.11. `uv run` is unaffected — this is
 > why it is the recommended way to run things.
 
+### Interactive development
+
+The project is written as plain `.py` modules and scripts — not notebooks. Real
+modules import cleanly, diff properly in Git, and can be tested.
+
+To still get cell-by-cell execution, mark cells with `# %%` comments and run them
+with **Shift+Enter**, which opens VS Code's Interactive Window against the same
+kernel. See `scripts/check_environment.py`. The same file remains a normal script:
+
+```bash
+uv run python scripts/check_environment.py
+```
+
+Use `# %% [markdown]` for prose cells.
+
+Reserve real `.ipynb` files for genuinely throwaway experiments and keep them in
+`notebooks/`. Anything that outlives the experiment belongs in
+`src/dissertation_project/`, imported back into the script or notebook.
+
+If you do want a full Jupyter server:
+
+```bash
+uv run jupyter lab
+```
+
+### GPU
+
+`pyproject.toml` sets `torch-backend = "auto"` under `[tool.uv]`, so `uv sync`
+selects CUDA wheels on a machine with an NVIDIA driver and falls back gracefully
+elsewhere. One lockfile covers both machines.
+
+Never hard-code `.cuda()`. Use the helper in
+`src/dissertation_project/device.py`, which resolves CUDA → MPS → CPU:
+
+```python
+from dissertation_project.device import describe_device, get_device, get_dtype
+
+device = get_device()
+print(describe_device())
+
+model = model.to(device)
+batch = batch.to(device)
+```
+
+`get_dtype()` returns `bfloat16` on GPUs that support it, `float16` on older ones,
+and `float32` on CPU — which matters when loading MedGemma, as full `float32`
+weights will not fit in most consumer GPU memory:
+
+```python
+model = AutoModelForCausalLM.from_pretrained(model_id, dtype=get_dtype())
+```
+
+Check what the current machine offers:
+
+```bash
+uv run python scripts/check_environment.py
+```
+
+| Machine | Device | Notes |
+| --- | --- | --- |
+| Linux server (`tamdhu`) | CPU, 52 threads | No NVIDIA GPU — onboard Matrox VGA only |
+| Personal laptop | CUDA if present | Set by `torch-backend = "auto"` at sync time |
+
+Because the server is CPU-only, run generation and any fine-tuning on the GPU
+machine; use the server for data preparation, indexing, and evaluation.
+
 ### Git
 
 Configure Git and connect the WSL environment to GitHub using SSH.
