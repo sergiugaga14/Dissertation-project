@@ -1,0 +1,17 @@
+[project]
+name = "dissertation-project"
+version = "0.1.0"
+description = "Retrieval-Augmented Generation dissertation project"
+readme = "README.md"
+authors = [
+    { name = "Sergiu Gaga", email = "Sergiu.Gaga@broadridge.com" }
+]
+requires-python = ">=3.12,<3.13"
+dependencies = []
+
+[project.scripts]
+dissertation-project = "dissertation_project:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"

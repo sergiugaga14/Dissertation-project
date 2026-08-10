@@ -8,7 +8,7 @@ The goal of this project is to investigate a Retrieval-Augmented Generation (RAG
 
 The project will use:
 
-* Python
+* Python 3.12 (managed with uv)
 * PyTorch
 * Hugging Face
 * MedGemma
@@ -18,24 +18,86 @@ The project will use:
 
 ## 1. Environment Setup
 
-The project should be reproducible on both my personal laptop (WSL/Linux) and the Linux server.
+The project must be reproducible on both my personal laptop (WSL/Linux) and the Linux
+server. The environment is managed with [uv](https://docs.astral.sh/uv/), which pins
+the Python interpreter *and* every package version so both machines are identical.
 
-### Python
-
-Use Python 3.11.
-
-Create a virtual environment:
+### Install uv (once per machine)
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS / Linux / WSL
 ```
+
+Restart the shell afterwards so `~/.local/bin` is on `PATH`.
+
+### Create the environment
+
+From the repository root:
+
+```bash
+uv sync
+```
+
+That single command:
+
+1. reads `.python-version` and downloads CPython **3.12.13** if it is missing
+   (a standalone build in `~/.local/share/uv/python` — the system Python is not touched);
+2. creates `.venv/`;
+3. installs the exact package versions recorded in `uv.lock`.
 
 Verify:
 
 ```bash
-python --version
+uv run python --version      # -> Python 3.12.13
 ```
+
+### Files that guarantee reproducibility
+
+| File | Purpose | Committed |
+| --- | --- | --- |
+| `.python-version` | Exact interpreter version (`3.12.13`) | Yes |
+| `pyproject.toml` | Declared dependencies and version constraints | Yes |
+| `uv.lock` | Fully resolved dependency graph with hashes, cross-platform | Yes |
+| `.venv/` | The generated environment | No (gitignored) |
+
+`uv.lock` resolves for Linux, macOS and Windows in one file, so the same lockfile
+serves both machines. Never edit it by hand.
+
+### Working in the environment
+
+Prefix commands with `uv run` — there is no need to activate anything, and `uv run`
+re-syncs the environment first so it can never be stale:
+
+```bash
+uv run python script.py
+uv run pytest
+uv run jupyter lab
+```
+
+Managing dependencies:
+
+```bash
+uv add torch transformers        # add packages, updates pyproject.toml + uv.lock
+uv add --dev pytest ruff         # development-only dependencies
+uv remove <package>              # remove a package
+uv lock --upgrade                # deliberately bump to the newest allowed versions
+uv tree                          # inspect the dependency graph
+```
+
+Use `uv add`, **not** `uv pip install`. Only `uv add` records the change in the
+lockfile, which is what propagates it to the other machine.
+
+After adding or removing dependencies, commit both files together:
+
+```bash
+git add pyproject.toml uv.lock
+git commit -m "Add retrieval dependencies"
+```
+
+> **Note (server only):** `~/.bashrc` defines `alias python='/usr/bin/python3.11'`.
+> Shell aliases take precedence over `PATH`, so after `source .venv/bin/activate`
+> the bare `python` command would still be 3.11. `uv run` is unaffected — this is
+> why it is the recommended way to run things.
 
 ### Git
 
@@ -53,27 +115,38 @@ ssh -T git@github.com
 The project should eventually follow a structure similar to:
 
 ```text
-dissertation/
+Dissertation-project/
 ├── README.md
 ├── .gitignore
-├── requirements.txt
+├── .python-version              # pinned interpreter
+├── pyproject.toml               # dependencies and project metadata
+├── uv.lock                      # fully resolved dependency graph
 │
-├── data/
+├── data/                        # gitignored
 │   ├── raw/
 │   └── processed/
 │
 ├── src/
-│   ├── data/
-│   ├── retrieval/
-│   ├── generation/
-│   └── evaluation/
+│   └── dissertation_project/
+│       ├── data/
+│       ├── retrieval/
+│       ├── generation/
+│       └── evaluation/
 │
 ├── scripts/
 ├── notebooks/
 ├── configs/
 ├── experiments/
 ├── results/
-└── docs/
+└── Documentation/
+```
+
+The package lives at `src/dissertation_project/` because `pyproject.toml` uses the
+`uv_build` backend, which expects a `src/<package_name>/` layout. `uv sync` installs
+it in editable mode, so modules are importable from anywhere in the project:
+
+```python
+from dissertation_project.retrieval import build_index
 ```
 
 Large datasets, model weights, generated indexes, and other large files should **not** be committed to Git.
@@ -247,15 +320,22 @@ The purpose is to avoid relying on memory when writing the dissertation later.
 
 Every important experiment should be reproducible from the repository.
 
-Record:
+The Python version and package versions are captured automatically by
+`.python-version` and `uv.lock`, so recording the **Git commit** of an experiment is
+enough to restore the exact software environment:
 
-* Python version
-* Package versions
-* Model versions
-* Dataset versions
+```bash
+git checkout <commit>
+uv sync
+```
+
+Record manually for each experiment:
+
+* Model version/revision (e.g. the Hugging Face commit hash of the MedGemma checkpoint)
+* Dataset version
 * Experiment configuration
 * Git commit
-* Hardware used
+* Hardware used (GPU model, VRAM, driver/CUDA version)
 
 The goal is to be able to recreate an experiment later on another machine.
 
@@ -265,7 +345,7 @@ When starting work:
 
 ```bash
 git pull
-source .venv/bin/activate
+uv sync          # apply any dependency changes pulled from the other machine
 ```
 
 Check the current project state:
