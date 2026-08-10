@@ -13,5 +13,6 @@ __pycache__/
 # Data & model artifacts
 data/
 models/
+notebooks/
 *.faiss
 *.index
